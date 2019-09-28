@@ -139,7 +139,7 @@ public class GameManager : MonoBehaviour
         if (chunkSize < 2)
         {
             chunkSize = 2;
-        }
+        }//jaya
     }
 }
 public struct Coord
