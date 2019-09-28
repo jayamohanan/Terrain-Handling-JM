@@ -16,6 +16,7 @@ public class TerrainChunk
     public GameObject terrainChunk;
     public MeshRenderer meshRenderer;
     public MeshFilter meshFilter;
+    public MeshCollider meshCollider;
     public TerrainChunk(NoiseSettings noiseSettings, int chunkSize, int lod, Vector3 position, Material terrainMat, Transform parent)
     {
         this.noiseSettings = noiseSettings;
@@ -42,6 +43,7 @@ public class TerrainChunk
         terrainChunk.transform.SetParent(parent);
         meshFilter = terrainChunk.AddComponent<MeshFilter>();
         meshRenderer = terrainChunk.AddComponent<MeshRenderer>();
+        meshCollider = terrainChunk.AddComponent<MeshCollider>();
         meshRenderer.material = terrainMat;
         GenerateLODMesh(lod);
     }
@@ -50,11 +52,14 @@ public class TerrainChunk
         if (lodDictionary.ContainsKey(lod))
         {
             meshFilter.mesh = lodDictionary[lod];
+            meshCollider.sharedMesh = lodDictionary[lod];
         }
         else
         {
             LODMesh lodMesh = new LODMesh(lod, map);
-            meshFilter.mesh = lodMesh.CreateMesh(lodDictionary);
+            Mesh mesh = lodMesh.CreateMesh(lodDictionary);
+            meshFilter.mesh = mesh;
+            meshCollider.sharedMesh = mesh;
         }
     }
     private void CreateTerrainChunkEditor()
@@ -65,9 +70,12 @@ public class TerrainChunk
         if (editorChunk)
         {
             MeshFilter meshFilter = editorChunk.GetComponent<MeshFilter>();
+            MeshCollider meshCollider = editorChunk.GetComponent<MeshCollider>();
             editorChunk.GetComponent<MeshRenderer>().material = terrainMat;
             LODMesh lodMesh = new LODMesh(lod, map);
-            meshFilter.mesh = lodMesh.CreateMesh(null);
+            Mesh mesh = lodMesh.CreateMesh(null);
+            meshFilter.mesh = mesh;
+            meshCollider.sharedMesh = mesh;
         }
         else
         {
