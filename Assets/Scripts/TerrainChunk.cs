@@ -143,7 +143,7 @@ public class TerrainChunk
             {
                 lodDictionary.Add(lod, mesh);
             }
-            return mesh;//jaya
+            return mesh;
         }
     }
 }
