@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Threading;
 public class TerrainChunk
 {
     static int chunkSize;
@@ -17,7 +18,11 @@ public class TerrainChunk
     public MeshRenderer meshRenderer;
     public MeshFilter meshFilter;
     public MeshCollider meshCollider;
-    public TerrainChunk(NoiseSettings noiseSettings, int chunkSize, int lod, Vector3 position, Material terrainMat, Transform parent)
+    MeshGenerator meshGenerator;
+    Noise noise;
+    bool mapGenInit;
+    Coord coord;
+    public TerrainChunk(NoiseSettings noiseSettings, int chunkSize, int lod, Vector3 position, Material terrainMat, Transform parent, Coord coord)
     {
         this.noiseSettings = noiseSettings;
         this.position = position;
@@ -25,6 +30,7 @@ public class TerrainChunk
         this.lod = lod;
         this.parent = parent;
         this.terrainMat = terrainMat;
+        this.coord = coord;
         if (Application.isPlaying)
         {
             CreateTerrainChunk();
@@ -36,8 +42,6 @@ public class TerrainChunk
     }
     private void CreateTerrainChunk()
     {
-        Noise noise = new Noise(noiseSettings);
-        map = noise.GenerateMap();
         terrainChunk = new GameObject();
         terrainChunk.transform.position = position;
         terrainChunk.transform.SetParent(parent);
@@ -45,9 +49,28 @@ public class TerrainChunk
         meshRenderer = terrainChunk.AddComponent<MeshRenderer>();
         meshCollider = terrainChunk.AddComponent<MeshCollider>();
         meshRenderer.material = terrainMat;
-        GenerateLODMesh(lod);
+
+        noise = new Noise(noiseSettings);
+        ThreadStart threadStart = GetMapOnThread;
+        new Thread(threadStart).Start();
     }
-    public void GenerateLODMesh(int lod)
+    void GetMapOnThread()
+    {
+        map = noise.GenerateMap();
+        
+        lock (GameManager.threadInfoMapQueue)
+        {
+        GameManager.threadInfoMapQueue.Enqueue(new ThreadInfoMap(OnMapDataReceived));
+        }
+    }
+    public void OnMapDataReceived()//this is called from main thread after dequeueing from the threadInfoMap queue
+    {
+        meshGenerator = new MeshGenerator(map);
+        mapGenInit = true;
+        Debug.Log("Mesh Generator initialised");
+        GenerateLODMeshOnThread(lod, "OnMapDataReceived");
+    }
+    public void GenerateLODMeshOnThread(int lod, string name)//this iscalled from main thread, i.e b OnMapData received function
     {
         if (lodDictionary.ContainsKey(lod))
         {
@@ -56,11 +79,26 @@ public class TerrainChunk
         }
         else
         {
-            LODMesh lodMesh = new LODMesh(lod, map);
-            Mesh mesh = lodMesh.CreateMesh(lodDictionary);
-            meshFilter.mesh = mesh;
-            meshCollider.sharedMesh = mesh;
+            ThreadStart threadStart =delegate() { ThreadLODMesh(lod); };
+            new Thread(threadStart).Start();
         }
+    }
+    void ThreadLODMesh(int lod)//thread
+    {
+        MeshData meshData = meshGenerator.CreateMesh(lod);
+        ThreadInfoMesh threadInfoMesh = new ThreadInfoMesh(OnMeshDataReceived, meshData);
+        lock (GameManager.threadInfoMeshQueue)
+        {
+            GameManager.threadInfoMeshQueue.Enqueue(threadInfoMesh);
+        }
+    }
+    public void OnMeshDataReceived(MeshData meshData)//main thread
+    {
+        Mesh mesh = meshGenerator.AssignMesh(meshData, lodDictionary, lod);
+        this.meshFilter.mesh = mesh;
+        this.meshCollider.sharedMesh = mesh;
+        if(!GameManager.coordDictionary.ContainsKey(coord))
+            GameManager.coordDictionary.Add(coord, this);
     }
     private void CreateTerrainChunkEditor()
     {
@@ -72,8 +110,9 @@ public class TerrainChunk
             MeshFilter meshFilter = editorChunk.GetComponent<MeshFilter>();
             MeshCollider meshCollider = editorChunk.GetComponent<MeshCollider>();
             editorChunk.GetComponent<MeshRenderer>().material = terrainMat;
-            LODMesh lodMesh = new LODMesh(lod, map);
-            Mesh mesh = lodMesh.CreateMesh(null);
+            MeshGenerator meshGenerator = new MeshGenerator(map);
+            MeshData meshData = meshGenerator.CreateMesh(lod);
+            Mesh mesh = meshGenerator.AssignMesh(meshData, lodDictionary, lod);
             meshFilter.mesh = mesh;
             meshCollider.sharedMesh = mesh;
         }
@@ -82,76 +121,22 @@ public class TerrainChunk
             Debug.Log("GameObject with tag Terrain doesn't exest");
         }
     }
-    public class LODMesh
+}
+public struct ThreadInfoMesh
+{
+    public Action<MeshData> action;
+    public MeshData meshData;
+    public ThreadInfoMesh(Action<MeshData> action, MeshData meshData)
     {
-        private int lod;
-        private float[,] map;
-        private Mesh mesh;
-        public LODMesh(int lod, float[,] map)
-        {
-            this.lod = lod;
-            this.map = map;
-        }
-        public Mesh CreateMesh(Dictionary<int, Mesh> lodDictionary)
-        {
-            int numVertices = (chunkSize - 1) / lod + 1;
-            Vector3[] vertices = new Vector3[numVertices * numVertices];
-            int[] triangles = new int[(numVertices - 1) * (numVertices - 1) * 6];
-            Vector2[] uvs = new Vector2[numVertices * numVertices];
-            float corner = -chunkSize / 2f;
-            float extraDistanceX = 0;
-            float extraDistanceZ = 0;
-            for (int j = 0; j < chunkSize; j += lod)
-            {
-                for (int i = 0; i < chunkSize; i += lod)
-                {
-                    int a = (j / lod) * numVertices + (i / lod);
-                    /*if (i == 0)
-                    {
-                        extraDistanceX = -0.5f;
-                    }
-                    if (j == 0)
-                    {
-                        extraDistanceZ = -0.5f;
-                    }
-                    if (i == (chunkSize - 1))
-                    {
-                        extraDistanceX = 0.5f;
-                    }
-                    if (j == (chunkSize - 1))
-                    {
-                        extraDistanceZ = 0.5f;
-                    }*/
-                    vertices[a] = new Vector3(corner + i + extraDistanceX, map[i, j], corner + j + extraDistanceZ);
-                    extraDistanceX = 0;
-                    extraDistanceZ = 0;
-                    //uvs[a] = 
-                }
-            }
-            int index = 0;
-            for (int j = 0; j < numVertices - 1; j++)
-            {
-                for (int i = 0; i < numVertices - 1; i++)
-                {
-                    int a = j * numVertices + i;
-                    triangles[index] = a + numVertices;
-                    triangles[index + 1] = a + 1;
-                    triangles[index + 2] = a;
-                    triangles[index + 3] = a + numVertices;
-                    triangles[index + 4] = a + numVertices + 1;
-                    triangles[index + 5] = a + 1;
-                    index += 6;
-                }
-            }
-            Mesh mesh = new Mesh();
-            mesh.vertices = vertices;
-            mesh.triangles = triangles;
-            mesh.RecalculateNormals();
-            if (lodDictionary != null)
-            {
-                lodDictionary.Add(lod, mesh);
-            }
-            return mesh;
-        }
+        this.action = action;
+        this.meshData = meshData;
+    }
+}
+public struct ThreadInfoMap
+{
+    public Action action;
+    public ThreadInfoMap(Action action)
+    {
+        this.action = action;
     }
 }

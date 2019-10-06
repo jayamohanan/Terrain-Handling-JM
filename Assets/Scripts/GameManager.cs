@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
     public int gridCount;
     Vector3 mouseWorldPosition;
     //public GameObject obj;
-    Dictionary<Coord, TerrainChunk> coordDictionary = new Dictionary<Coord, TerrainChunk>();
+    public static Dictionary<Coord, TerrainChunk> coordDictionary = new Dictionary<Coord, TerrainChunk>();
     List<Coord> activeCoord = new List<Coord>();
     Transform parent;
     Vector3 lastPosition;
@@ -37,6 +37,8 @@ public class GameManager : MonoBehaviour
     MeshFilter editorMeshFilter;
     Vector2 mousePositionXZ;
     NoiseSettings noiseSettings;
+    public static Queue<ThreadInfoMesh> threadInfoMeshQueue = new Queue<ThreadInfoMesh>();
+    public static Queue<ThreadInfoMap> threadInfoMapQueue = new Queue<ThreadInfoMap>();
     void Start()
     {
         parent = new GameObject("Parent").transform;
@@ -58,6 +60,16 @@ public class GameManager : MonoBehaviour
             deltaDistance = 0;
             Coord coord = GetCoordFromWorldPosition(mouseWorldPosition);
             CreateGrid(coord);
+        }
+        while (threadInfoMeshQueue.Count > 0)
+        {
+            ThreadInfoMesh threadInfoMesh = threadInfoMeshQueue.Dequeue();
+            threadInfoMesh.action(threadInfoMesh.meshData);
+        }
+        while (threadInfoMapQueue.Count > 0)
+        {
+            ThreadInfoMap threadInfoMap = threadInfoMapQueue.Dequeue();
+            threadInfoMap.action();
         }
     }
     public Coord GetCoordFromWorldPosition(Vector3 mouseWorldPosition)
@@ -101,9 +113,12 @@ public class GameManager : MonoBehaviour
                 }
                 lod = lodArray[lodIndex];
                 Coord neighbourCoord = new Coord((coord.xCoord + i), (coord.yCoord + j));
+                //call thread to calculate mesh
+                //thread then calls call back to this object and adds the mesh to terrain chunk if any or else create terrain chunk and add
+                //
                 if (coordDictionary.ContainsKey(neighbourCoord))
                 {
-                    coordDictionary[neighbourCoord].GenerateLODMesh(lod);
+                    coordDictionary[neighbourCoord].GenerateLODMeshOnThread(lod, "Dictionary");
                     coordDictionary[neighbourCoord].terrainChunk.SetActive(true);
                     activeCoord.Add(neighbourCoord);
                 }
@@ -112,9 +127,7 @@ public class GameManager : MonoBehaviour
                     Vector3 position = new Vector3(neighbourCoord.xCoord * chunkSize, 0, neighbourCoord.yCoord * chunkSize);
                     offset = new Vector2(neighbourCoord.xCoord, neighbourCoord.yCoord) * chunkSize;
                     noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
-                    TerrainChunk terrainChunk = new TerrainChunk(noiseSettings, chunkSize, lod, position, terrainMat, parent);
-                    activeCoord.Add(neighbourCoord);
-                    coordDictionary.Add(neighbourCoord, terrainChunk);
+                    TerrainChunk terrainChunk = new TerrainChunk(noiseSettings, chunkSize, lod, position, terrainMat, parent, neighbourCoord);
                 }
             }
         }
@@ -124,7 +137,7 @@ public class GameManager : MonoBehaviour
         lod = lodArray[lodIndex];
         offset = Vector2.zero;
         noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
-        new TerrainChunk(noiseSettings, chunkSize, lod, Vector3.zero, terrainMat, parent);
+        new TerrainChunk(noiseSettings, chunkSize, lod, Vector3.zero, terrainMat, parent, new Coord(0,0));
     }
     void OnValidate()
     {
