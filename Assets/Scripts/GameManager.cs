@@ -74,13 +74,16 @@ public class GameManager : MonoBehaviour
     }
     public Coord GetCoordFromWorldPosition(Vector3 mouseWorldPosition)
     {
-        foreach (Coord coords in activeCoord)
-        {
-            coordDictionary[coords].terrainChunk.SetActive(false);
-        }
-        activeCoord.Clear();
-        Coord coord = new Coord(Mathf.RoundToInt(mouseWorldPosition.x / chunkSize), Mathf.RoundToInt(mouseWorldPosition.z / chunkSize));
-        return coord;
+    /*
+       Called when looking to change the location of terrain chunk  
+    */
+    foreach (Coord coords in activeCoord)
+    {
+        coordDictionary[coords].terrainChunk.SetActive(false);
+    }
+    activeCoord.Clear();
+    Coord coord = new Coord(Mathf.RoundToInt(mouseWorldPosition.x / chunkSize), Mathf.RoundToInt(mouseWorldPosition.z / chunkSize));
+    return coord;
     }
     public void CreateGrid(Coord coord)
     {
@@ -118,7 +121,7 @@ public class GameManager : MonoBehaviour
                 //
                 if (coordDictionary.ContainsKey(neighbourCoord))
                 {
-                    coordDictionary[neighbourCoord].GenerateLODMeshOnThread(lod, "Dictionary");
+                    coordDictionary[neighbourCoord].RequestMeshData(lod);
                     coordDictionary[neighbourCoord].terrainChunk.SetActive(true);
                     activeCoord.Add(neighbourCoord);
                 }

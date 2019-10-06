@@ -50,16 +50,13 @@ public class MeshGenerator
         MeshData meshData = new MeshData(numVertices, vertices, triangles);
         return meshData;
     }
-    public Mesh AssignMesh(MeshData meshData, Dictionary<int, Mesh> lodDictionary, int lod)
+    public Mesh AssignMesh(MeshData meshData)
     {
         Mesh mesh = new Mesh();
         mesh.vertices = meshData.vertices;
         mesh.triangles = meshData.triangles;
         mesh.RecalculateNormals();
-        if (lodDictionary != null && !lodDictionary.ContainsKey(lod))
-        {
-            lodDictionary.Add(lod, mesh);
-        }
+        
         return mesh;
     }
 }

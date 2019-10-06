@@ -20,7 +20,6 @@ public class TerrainChunk
     public MeshCollider meshCollider;
     MeshGenerator meshGenerator;
     Noise noise;
-    bool mapGenInit;
     Coord coord;
     public TerrainChunk(NoiseSettings noiseSettings, int chunkSize, int lod, Vector3 position, Material terrainMat, Transform parent, Coord coord)
     {
@@ -42,6 +41,7 @@ public class TerrainChunk
     }
     private void CreateTerrainChunk()
     {
+        //Creates GameObject
         terrainChunk = new GameObject();
         terrainChunk.transform.position = position;
         terrainChunk.transform.SetParent(parent);
@@ -50,27 +50,25 @@ public class TerrainChunk
         meshCollider = terrainChunk.AddComponent<MeshCollider>();
         meshRenderer.material = terrainMat;
 
+        //Adds shape
         noise = new Noise(noiseSettings);
-        ThreadStart threadStart = GetMapOnThread;
-        new Thread(threadStart).Start();
+        new Thread(MapDataThread).Start();
     }
-    void GetMapOnThread()
+    void MapDataThread()//From sub thread
     {
         map = noise.GenerateMap();
-        
         lock (GameManager.threadInfoMapQueue)
         {
         GameManager.threadInfoMapQueue.Enqueue(new ThreadInfoMap(OnMapDataReceived));
         }
     }
-    public void OnMapDataReceived()//this is called from main thread after dequeueing from the threadInfoMap queue
+    public void OnMapDataReceived()//Main Thread
     {
         meshGenerator = new MeshGenerator(map);
-        mapGenInit = true;
-        Debug.Log("Mesh Generator initialised");
-        GenerateLODMeshOnThread(lod, "OnMapDataReceived");
+        GameManager.coordDictionary.Add(coord, this);
+        MeshDataThread(lod);
     }
-    public void GenerateLODMeshOnThread(int lod, string name)//this iscalled from main thread, i.e b OnMapData received function
+    public void MeshDataThread(int lod)//this iscalled from main thread, i.e b OnMapData received function
     {
         if (lodDictionary.ContainsKey(lod))
         {
@@ -79,11 +77,11 @@ public class TerrainChunk
         }
         else
         {
-            ThreadStart threadStart =delegate() { ThreadLODMesh(lod); };
+            ThreadStart threadStart =delegate{ ObtainLODMeshData(lod); };
             new Thread(threadStart).Start();
         }
     }
-    void ThreadLODMesh(int lod)//thread
+    void ObtainLODMeshData(int lod)//thread
     {
         MeshData meshData = meshGenerator.CreateMesh(lod);
         ThreadInfoMesh threadInfoMesh = new ThreadInfoMesh(OnMeshDataReceived, meshData);
@@ -94,11 +92,14 @@ public class TerrainChunk
     }
     public void OnMeshDataReceived(MeshData meshData)//main thread
     {
-        Mesh mesh = meshGenerator.AssignMesh(meshData, lodDictionary, lod);
+        Mesh mesh = meshGenerator.AssignMesh(meshData);
         this.meshFilter.mesh = mesh;
         this.meshCollider.sharedMesh = mesh;
-        if(!GameManager.coordDictionary.ContainsKey(coord))
-            GameManager.coordDictionary.Add(coord, this);
+        if (!lodDictionary.ContainsKey(lod))
+        {
+            lodDictionary.Add(lod, mesh);
+        }
+        
     }
     private void CreateTerrainChunkEditor()
     {
@@ -112,7 +113,7 @@ public class TerrainChunk
             editorChunk.GetComponent<MeshRenderer>().material = terrainMat;
             MeshGenerator meshGenerator = new MeshGenerator(map);
             MeshData meshData = meshGenerator.CreateMesh(lod);
-            Mesh mesh = meshGenerator.AssignMesh(meshData, lodDictionary, lod);
+            Mesh mesh = meshGenerator.AssignMesh(meshData);
             meshFilter.mesh = mesh;
             meshCollider.sharedMesh = mesh;
         }
