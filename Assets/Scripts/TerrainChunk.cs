@@ -66,9 +66,9 @@ public class TerrainChunk
     {
         meshGenerator = new MeshGenerator(map);
         GameManager.coordDictionary.Add(coord, this);
-        MeshDataThread(lod);
+        RequestMeshData(lod);
     }
-    public void MeshDataThread(int lod)//this iscalled from main thread, i.e b OnMapData received function
+    public void RequestMeshData(int lod)//this iscalled from main thread, i.e b OnMapData received function
     {
         if (lodDictionary.ContainsKey(lod))
         {
@@ -77,11 +77,11 @@ public class TerrainChunk
         }
         else
         {
-            ThreadStart threadStart =delegate{ ObtainLODMeshData(lod); };
+            ThreadStart threadStart =delegate{ MeshDataThread(lod); };
             new Thread(threadStart).Start();
         }
     }
-    void ObtainLODMeshData(int lod)//thread
+    public void MeshDataThread(int lod)//thread
     {
         MeshData meshData = meshGenerator.CreateMesh(lod);
         ThreadInfoMesh threadInfoMesh = new ThreadInfoMesh(OnMeshDataReceived, meshData);
