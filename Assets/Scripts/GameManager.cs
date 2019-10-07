@@ -25,8 +25,6 @@ public class GameManager : MonoBehaviour
     public AnimationCurve animationCurve;
     [Header("Grid")]
     public int gridCount;
-    Vector3 mouseWorldPosition;
-    //public GameObject obj;
     public static Dictionary<Coord, TerrainChunk> coordDictionary = new Dictionary<Coord, TerrainChunk>();
     List<Coord> activeCoord = new List<Coord>();
     Transform parent;
@@ -35,7 +33,6 @@ public class GameManager : MonoBehaviour
     Vector2 offset;
     GameObject editorTerrain;
     MeshFilter editorMeshFilter;
-    Vector2 mousePositionXZ;
     NoiseSettings noiseSettings;
     public static Queue<ThreadInfoMesh> threadInfoMeshQueue = new Queue<ThreadInfoMesh>();
     public static Queue<ThreadInfoMap> threadInfoMapQueue = new Queue<ThreadInfoMap>();
@@ -43,16 +40,19 @@ public class GameManager : MonoBehaviour
     {
         parent = new GameObject("Parent").transform;
         InitializeAndClear();
+        GetCurrentCoord();
     }
     public void InitializeAndClear()
     {
         activeCoord.Clear();
         coordDictionary.Clear();
+
+        Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
+        Coord coord = GetCoordFromWorldPosition(mouseWorldPosition);
     }
-    private void Update()
+    private void GetCurrentCoord()
     {
-        mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
-        mousePositionXZ = new Vector2(mouseWorldPosition.x, mouseWorldPosition.z);
+        Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
         float deltaDistance = Vector3.Distance(mouseWorldPosition, lastPosition);
         if (deltaDistance > 150)
         {
@@ -61,6 +61,11 @@ public class GameManager : MonoBehaviour
             Coord coord = GetCoordFromWorldPosition(mouseWorldPosition);
             CreateGrid(coord);
         }
+
+    }
+    private void Update()
+    {
+        GetCurrentCoord();
         while (threadInfoMeshQueue.Count > 0)
         {
             ThreadInfoMesh threadInfoMesh = threadInfoMeshQueue.Dequeue();
@@ -121,17 +126,24 @@ public class GameManager : MonoBehaviour
                 //
                 if (coordDictionary.ContainsKey(neighbourCoord))
                 {
-                    coordDictionary[neighbourCoord].RequestMeshData(lod);
+                    if (coordDictionary[neighbourCoord].meshGenerator != null)
+                    {
+                        coordDictionary[neighbourCoord].RequestMeshData(lod);
+                    }
                     coordDictionary[neighbourCoord].terrainChunk.SetActive(true);
-                    activeCoord.Add(neighbourCoord);
+                    
                 }
                 else
                 {
                     Vector3 position = new Vector3(neighbourCoord.xCoord * chunkSize, 0, neighbourCoord.yCoord * chunkSize);
                     offset = new Vector2(neighbourCoord.xCoord, neighbourCoord.yCoord) * chunkSize;
                     noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
-                    TerrainChunk terrainChunk = new TerrainChunk(noiseSettings, chunkSize, lod, position, terrainMat, parent, neighbourCoord);
+                    TerrainChunk terrainChunk = new TerrainChunk(noiseSettings, chunkSize, lod, position, terrainMat, parent);
+                    coordDictionary.Add(neighbourCoord, terrainChunk);
                 }
+                activeCoord.Add(neighbourCoord);
+                
+
             }
         }
     }
@@ -140,7 +152,7 @@ public class GameManager : MonoBehaviour
         lod = lodArray[lodIndex];
         offset = Vector2.zero;
         noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
-        new TerrainChunk(noiseSettings, chunkSize, lod, Vector3.zero, terrainMat, parent, new Coord(0,0));
+        new TerrainChunk(noiseSettings, chunkSize, lod, Vector3.zero, terrainMat, parent);
     }
     void OnValidate()
     {

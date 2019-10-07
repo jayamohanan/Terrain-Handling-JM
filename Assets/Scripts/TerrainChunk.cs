@@ -18,10 +18,9 @@ public class TerrainChunk
     public MeshRenderer meshRenderer;
     public MeshFilter meshFilter;
     public MeshCollider meshCollider;
-    MeshGenerator meshGenerator;
+    public MeshGenerator meshGenerator;
     Noise noise;
-    Coord coord;
-    public TerrainChunk(NoiseSettings noiseSettings, int chunkSize, int lod, Vector3 position, Material terrainMat, Transform parent, Coord coord)
+    public TerrainChunk(NoiseSettings noiseSettings, int chunkSize, int lod, Vector3 position, Material terrainMat, Transform parent)
     {
         this.noiseSettings = noiseSettings;
         this.position = position;
@@ -29,7 +28,6 @@ public class TerrainChunk
         this.lod = lod;
         this.parent = parent;
         this.terrainMat = terrainMat;
-        this.coord = coord;
         if (Application.isPlaying)
         {
             CreateTerrainChunk();
@@ -65,7 +63,6 @@ public class TerrainChunk
     public void OnMapDataReceived()//Main Thread
     {
         meshGenerator = new MeshGenerator(map);
-        GameManager.coordDictionary.Add(coord, this);
         RequestMeshData(lod);
     }
     public void RequestMeshData(int lod)//this iscalled from main thread, i.e b OnMapData received function
