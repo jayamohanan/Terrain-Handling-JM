@@ -59,7 +59,7 @@ public class Noise
             {
                 if (map[i, j] >= maxValue)
                     maxValue = map[i, j];
-                if (map[i, j] <= minValue)
+                if (map[i, j] < minValue)
                     minValue = map[i, j];
             }
         }

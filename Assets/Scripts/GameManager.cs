@@ -5,6 +5,7 @@ using System;
 using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
+    public float angularSpeed = 1f;
     public bool autoUpdate;
     [Range(0, 4)]
     public int lodIndex;
@@ -37,6 +38,7 @@ public class GameManager : MonoBehaviour
     MeshFilter editorMeshFilter;
     Vector2 mousePositionXZ;
     NoiseSettings noiseSettings;
+    bool initialTerrainDrawn = false;
     void Start()
     {
         parent = new GameObject("Parent").transform;
@@ -49,10 +51,24 @@ public class GameManager : MonoBehaviour
     }
     private void Update()
     {
-        mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
-        mousePositionXZ = new Vector2(mouseWorldPosition.x, mouseWorldPosition.z);
+        //Terrain at Mouse Point
+        //mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
+        //mousePositionXZ = new Vector2(mouseWorldPosition.x, mouseWorldPosition.z);
+
+        //Terrain in a circular path, used for checking frame rates
+        float t = Time.time;
+        mousePositionXZ = new Vector2(Mathf.Sin(t), Mathf.Cos(t)) * angularSpeed;
+        mouseWorldPosition = new Vector3(mousePositionXZ.x, 0, mousePositionXZ.y);
+
         float deltaDistance = Vector3.Distance(mouseWorldPosition, lastPosition);
-        if (deltaDistance > 150)
+        if (!initialTerrainDrawn)
+        {
+            lastPosition = mouseWorldPosition;
+            Coord coord = GetCoordFromWorldPosition(mouseWorldPosition);
+            CreateGrid(coord);
+            initialTerrainDrawn = true;
+        }
+        if (deltaDistance > 150 )
         {
             lastPosition = mouseWorldPosition;
             deltaDistance = 0;
