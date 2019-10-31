@@ -5,6 +5,7 @@ using System;
 using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
+    public float angularSpeed = 1000f;
     public bool autoUpdate;
     [Range(0, 4)]
     public int lodIndex;
@@ -34,6 +35,7 @@ public class GameManager : MonoBehaviour
     GameObject editorTerrain;
     MeshFilter editorMeshFilter;
     NoiseSettings noiseSettings;
+    Vector3 mouseWorldPosition;
     public static Queue<ThreadInfoMesh> threadInfoMeshQueue = new Queue<ThreadInfoMesh>();
     public static Queue<ThreadInfoMap> threadInfoMapQueue = new Queue<ThreadInfoMap>();
     void Start()
@@ -52,7 +54,11 @@ public class GameManager : MonoBehaviour
     }
     private void GetCurrentCoord()
     {
-        Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
+        //Terrain along mousePosition
+        //mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
+
+        //Terrain along X axis, used for checking frame rates
+        mouseWorldPosition += new Vector3(10, 0, 0);
         float deltaDistance = Vector3.Distance(mouseWorldPosition, lastPosition);
         if (deltaDistance > 150)
         {
