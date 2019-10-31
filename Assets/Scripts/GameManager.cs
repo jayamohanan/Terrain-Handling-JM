@@ -53,12 +53,9 @@ public class GameManager : MonoBehaviour
     {
         //Terrain at Mouse Point
         //mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
-        //mousePositionXZ = new Vector2(mouseWorldPosition.x, mouseWorldPosition.z);
 
-        //Terrain in a circular path, used for checking frame rates
-        float t = Time.time;
-        mousePositionXZ = new Vector2(Mathf.Sin(t), Mathf.Cos(t)) * angularSpeed;
-        mouseWorldPosition = new Vector3(mousePositionXZ.x, 0, mousePositionXZ.y);
+        //Terrain along X axis, used for checking frame rates
+        mouseWorldPosition += new Vector3(100, 0, 0);
 
         float deltaDistance = Vector3.Distance(mouseWorldPosition, lastPosition);
         if (!initialTerrainDrawn)
