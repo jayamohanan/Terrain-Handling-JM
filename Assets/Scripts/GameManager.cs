@@ -58,7 +58,7 @@ public class GameManager : MonoBehaviour
         //mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
 
         //Terrain along X axis, used for checking frame rates
-        mouseWorldPosition += new Vector3(10, 0, 0);
+        mouseWorldPosition += new Vector3(100, 0, 0);
         float deltaDistance = Vector3.Distance(mouseWorldPosition, lastPosition);
         if (deltaDistance > 150)
         {
