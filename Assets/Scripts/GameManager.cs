@@ -82,6 +82,12 @@ public class GameManager : MonoBehaviour
             ThreadInfoMap threadInfoMap = threadInfoMapQueue.Dequeue();
             threadInfoMap.action();
         }
+
+        //Delete this
+        if(Time.time > 35)
+        {
+            UnityEditor.EditorApplication.isPlaying = false;
+        }
     }
     public Coord GetCoordFromWorldPosition(Vector3 mouseWorldPosition)
     {
