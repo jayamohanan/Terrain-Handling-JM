@@ -52,14 +52,14 @@ public class TerrainChunk
         if (lodDictionary.ContainsKey(lod))
         {
             meshFilter.mesh = lodDictionary[lod];
-            meshCollider.sharedMesh = lodDictionary[lod];
+            //meshCollider.sharedMesh = lodDictionary[lod];
         }
         else
         {
             LODMesh lodMesh = new LODMesh(lod, map);
             Mesh mesh = lodMesh.CreateMesh(lodDictionary);
             meshFilter.mesh = mesh;
-            meshCollider.sharedMesh = mesh;
+            //meshCollider.sharedMesh = mesh;
         }
     }
     private void CreateTerrainChunkEditor()
@@ -75,7 +75,7 @@ public class TerrainChunk
             LODMesh lodMesh = new LODMesh(lod, map);
             Mesh mesh = lodMesh.CreateMesh(null);
             meshFilter.mesh = mesh;
-            meshCollider.sharedMesh = mesh;
+            //meshCollider.sharedMesh = mesh;
         }
         else
         {
