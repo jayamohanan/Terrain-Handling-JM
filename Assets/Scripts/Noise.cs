@@ -20,7 +20,8 @@ public class Noise
         this.persistence = noiseSettings.persistence;
         this.lacunarity = noiseSettings.lacunarity;
         this.inverseLerp = noiseSettings.inverseLerp;
-        this.animationCurve = noiseSettings.animationCurve;
+        //this.animationCurve = noiseSettings.animationCurve;
+        this.animationCurve = new AnimationCurve(noiseSettings.animationCurve.keys);
         this.offset = noiseSettings.offset;
         this.height = noiseSettings.height;
     }

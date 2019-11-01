@@ -70,7 +70,7 @@ public class TerrainChunk
         if (lodDictionary.ContainsKey(lod))
         {
             meshFilter.mesh = lodDictionary[lod];
-            meshCollider.sharedMesh = lodDictionary[lod];
+           // meshCollider.sharedMesh = lodDictionary[lod];
         }
         else
         {
@@ -91,12 +91,11 @@ public class TerrainChunk
     {
         Mesh mesh = meshGenerator.AssignMesh(meshData);
         this.meshFilter.mesh = mesh;
-        this.meshCollider.sharedMesh = mesh;
+        //this.meshCollider.sharedMesh = mesh;
         if (!lodDictionary.ContainsKey(lod))
         {
             lodDictionary.Add(lod, mesh);
         }
-        
     }
     private void CreateTerrainChunkEditor()
     {
