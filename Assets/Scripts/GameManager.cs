@@ -5,6 +5,7 @@ using System;
 using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
+    public bool mouseMovement;
     public float angularSpeed = 1f;
     public bool autoUpdate;
     [Range(0, 4)]
@@ -51,11 +52,16 @@ public class GameManager : MonoBehaviour
     }
     private void Update()
     {
-        //Terrain at Mouse Point
-        //mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
-
-        //Terrain along X axis, used for checking frame rates
-        mouseWorldPosition += new Vector3(100, 0, 0);
+        if (mouseMovement)
+        {
+            //Terrain along mousePosition
+            mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
+        }
+        else
+        {
+            //Terrain along X axis, used for checking frame rates
+            mouseWorldPosition += new Vector3(100, 0, 0);
+        }
 
         float deltaDistance = Vector3.Distance(mouseWorldPosition, lastPosition);
         if (!initialTerrainDrawn)
