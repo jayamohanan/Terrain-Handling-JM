@@ -80,6 +80,7 @@ public class TerrainChunk
     }
     public void MeshDataThread(int lod)//thread
     {
+
         MeshData meshData = meshGenerator.CreateMesh(lod);
         ThreadInfoMesh threadInfoMesh = new ThreadInfoMesh(OnMeshDataReceived, meshData);
         lock (GameManager.threadInfoMeshQueue)

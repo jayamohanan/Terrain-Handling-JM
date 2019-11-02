@@ -5,6 +5,7 @@ using System;
 using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
+    public bool mouseMovement;
     public float angularSpeed = 1000f;
     public bool autoUpdate;
     [Range(0, 4)]
@@ -38,6 +39,7 @@ public class GameManager : MonoBehaviour
     Vector3 mouseWorldPosition;
     public static Queue<ThreadInfoMesh> threadInfoMeshQueue = new Queue<ThreadInfoMesh>();
     public static Queue<ThreadInfoMap> threadInfoMapQueue = new Queue<ThreadInfoMap>();
+   
     void Start()
     {
         parent = new GameObject("Parent").transform;
@@ -54,11 +56,16 @@ public class GameManager : MonoBehaviour
     }
     private void GetCurrentCoord()
     {
-        //Terrain along mousePosition
-        //mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
-
-        //Terrain along X axis, used for checking frame rates
-        mouseWorldPosition += new Vector3(100, 0, 0);
+        if (mouseMovement)
+        {
+            //Terrain along mousePosition
+            mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
+        }
+        else
+        {
+            //Terrain along X axis, used for checking frame rates
+            mouseWorldPosition += new Vector3(100, 0, 0);
+        }
         float deltaDistance = Vector3.Distance(mouseWorldPosition, lastPosition);
         if (deltaDistance > 150)
         {
@@ -81,12 +88,6 @@ public class GameManager : MonoBehaviour
         {
             ThreadInfoMap threadInfoMap = threadInfoMapQueue.Dequeue();
             threadInfoMap.action();
-        }
-
-        //Delete this
-        if(Time.time > 35)
-        {
-            UnityEditor.EditorApplication.isPlaying = false;
         }
     }
     public Coord GetCoordFromWorldPosition(Vector3 mouseWorldPosition)
