@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public class NoiseSettings
+public struct NoiseSettings
 {
     public int chunkSize;
     public int octaves;

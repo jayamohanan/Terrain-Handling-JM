@@ -1,61 +1,61 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Jobs;
+using Unity.Collections;
 public class Noise
 {
-    int chunkSize;
-    int octaves;
-    float scale;
-    float persistence;
-    float lacunarity;
-    bool inverseLerp;
-    AnimationCurve animationCurve;
-    Vector3 offset;
-    float height;
+    private NoiseSettings noiseSettings;
     public Noise(NoiseSettings noiseSettings)
     {
-        this.chunkSize = noiseSettings.chunkSize;
-        this.octaves = noiseSettings.octaves;
-        this.scale = noiseSettings.scale;
-        this.persistence = noiseSettings.persistence;
-        this.lacunarity = noiseSettings.lacunarity;
-        this.inverseLerp = noiseSettings.inverseLerp;
-        this.animationCurve = noiseSettings.animationCurve;
-        this.offset = noiseSettings.offset;
-        this.height = noiseSettings.height;
+        this.noiseSettings = noiseSettings;
     }
     public float[,] GenerateMap()
     {
-        float[,] map = new float[chunkSize, chunkSize];
+       
+        return map;
+    }
+}
+
+struct MapCreatorStruct : IJob
+{
+    private NoiseSettings noiseSettings;
+    public MapCreatorStruct(NoiseSettings noiseSettings)
+    {
+        this.noiseSettings = noiseSettings;
+    }
+    public void Execute()
+    {
+        float[,] map = new float[noiseSettings.chunkSize, noiseSettings.chunkSize];
         float frequency;
         float amplitude = 1;
         float maxAmplitude = 0;
         float maxValue = float.MinValue;
         float minValue = float.MaxValue;
-        for (int i = 0; i < octaves; i++)
+        for (int i = 0; i < noiseSettings.octaves; i++)
         {
             maxAmplitude += amplitude;
-            amplitude *= persistence;
+            amplitude *= noiseSettings.persistence;
         }
-        for (int j = 0; j < chunkSize; j++)
+        for (int j = 0; j < noiseSettings.chunkSize; j++)
         {
-            for (int i = 0; i < chunkSize; i++)
+            for (int i = 0; i < noiseSettings.chunkSize; i++)
             {
                 amplitude = 1;
                 frequency = 1;
-                float perlinX = ((i + offset.x) / (float)chunkSize) * scale;
-                float perlinY = ((j + offset.y) / (float)chunkSize) * scale;
-                for (int k = 0; k < octaves; k++)
+                float perlinX = ((i + noiseSettings.offset.x) / (float)noiseSettings.chunkSize) * noiseSettings.scale;
+                float perlinY = ((j + noiseSettings.offset.y) / (float)noiseSettings.chunkSize) * noiseSettings.scale;
+                for (int k = 0; k < noiseSettings.octaves; k++)
                 {
                     map[i, j] += Mathf.PerlinNoise(perlinX * frequency, perlinY * frequency) * amplitude;
-                    amplitude *= persistence;
-                    frequency *= lacunarity;
+                    amplitude *= noiseSettings.persistence;
+                    frequency *= noiseSettings.lacunarity;
                 }
             }
         }
-        for (int i = 0; i < chunkSize; i++)
+        for (int i = 0; i < noiseSettings.chunkSize; i++)
         {
-            for (int j = 0; j < chunkSize; j++)
+            for (int j = 0; j < noiseSettings.chunkSize; j++)
             {
                 if (map[i, j] >= maxValue)
                     maxValue = map[i, j];
@@ -63,13 +63,12 @@ public class Noise
                     minValue = map[i, j];
             }
         }
-        for (int i = 0; i < chunkSize; i++)
+        for (int i = 0; i < noiseSettings.chunkSize; i++)
         {
-            for (int j = 0; j < chunkSize; j++)
+            for (int j = 0; j < noiseSettings.chunkSize; j++)
             {
-                map[i, j] = animationCurve.Evaluate(Mathf.InverseLerp(minValue, maxValue, map[i, j])) * height;
+                map[i, j] = noiseSettings.animationCurve.Evaluate(Mathf.noiseSettings.inverseLerp(minValue, maxValue, map[i, j])) * noiseSettings.height;
             }
         }
-        return map;
     }
 }
