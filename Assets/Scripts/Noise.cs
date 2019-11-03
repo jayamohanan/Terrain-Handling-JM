@@ -12,7 +12,24 @@ public class Noise
     }
     public float[,] GenerateMap()
     {
-       
+        float[,] map = new float[noiseSettings.chunkSize,noiseSettings.chunkSize];
+        float[] map1D = new float[noiseSettings.chunkSize*noiseSettings.chunkSize];
+       NativeArray<float> mapNativeArray = new NativeArray<float>(noiseSettings.chunkSize*noiseSettings.chunkSize, Allocator.Temp);
+        new MapCreatorStruct(noiseSettings, ref mapNativeArray).Schedule().Complete();
+        mapNativeArray.CopyTo(map1D);
+        int width = map.GetLength(0);
+        int length = map.GetLength(1);
+        int x = 0;
+        int y = 0;
+        for (int i = 0; i < map1D.Length; i++)
+        {
+            map[x, y] = map1D[i];
+            if(i == width - 1)
+            {
+                x = 0;
+                y++;
+            }
+        }
         return map;
     }
 }
@@ -20,9 +37,11 @@ public class Noise
 struct MapCreatorStruct : IJob
 {
     private NoiseSettings noiseSettings;
-    public MapCreatorStruct(NoiseSettings noiseSettings)
+    private NativeArray<float> mapNativeArray;
+    public MapCreatorStruct(NoiseSettings noiseSettings, ref NativeArray<float> mapNativeArray)
     {
         this.noiseSettings = noiseSettings;
+        this.mapNativeArray = mapNativeArray;
     }
     public void Execute()
     {
@@ -67,7 +86,7 @@ struct MapCreatorStruct : IJob
         {
             for (int j = 0; j < noiseSettings.chunkSize; j++)
             {
-                map[i, j] = noiseSettings.animationCurve.Evaluate(Mathf.noiseSettings.inverseLerp(minValue, maxValue, map[i, j])) * noiseSettings.height;
+                map[i, j] = noiseSettings.animationCurve.Evaluate(Mathf.InverseLerp(minValue, maxValue, map[i, j])) * noiseSettings.height;
             }
         }
     }
