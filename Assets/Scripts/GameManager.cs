@@ -39,13 +39,16 @@ public class GameManager : MonoBehaviour
     Vector3 mouseWorldPosition;
     public static Queue<ThreadInfoMesh> threadInfoMeshQueue = new Queue<ThreadInfoMesh>();
     public static Queue<ThreadInfoMap> threadInfoMapQueue = new Queue<ThreadInfoMap>();
-   
+
+    
     void Start()
     {
         parent = new GameObject("Parent").transform;
         InitializeAndClear();
         GetCurrentCoord();
+
     }
+    
     public void InitializeAndClear()
     {
         activeCoord.Clear();
