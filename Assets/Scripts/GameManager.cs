@@ -40,6 +40,21 @@ public class GameManager : MonoBehaviour
     Vector2 mousePositionXZ;
     NoiseSettings noiseSettings;
     bool initialTerrainDrawn = false;
+    public static float[] animationKeys;
+    private void Awake()
+    {
+        animationKeys = BakeAnimationKeys(animationCurve);
+    }
+    float[] BakeAnimationKeys(AnimationCurve animationCurve)
+    {
+        float[] animationKeys = new float[256];
+        for (int i = 0; i < 255; i++)
+        {
+            animationKeys[i] = animationCurve.Evaluate(i / 255f);
+        }
+        return animationKeys;
+    }
+
     void Start()
     {
         parent = new GameObject("Parent").transform;
@@ -130,7 +145,7 @@ public class GameManager : MonoBehaviour
                 {
                     Vector3 position = new Vector3(neighbourCoord.xCoord * chunkSize, 0, neighbourCoord.yCoord * chunkSize);
                     offset = new Vector2(neighbourCoord.xCoord, neighbourCoord.yCoord) * chunkSize;
-                    noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
+                    noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, inverseLerp);
                     TerrainChunk terrainChunk = new TerrainChunk(noiseSettings, chunkSize, lod, position, terrainMat, parent);
                     activeCoord.Add(neighbourCoord);
                     coordDictionary.Add(neighbourCoord, terrainChunk);
@@ -142,7 +157,7 @@ public class GameManager : MonoBehaviour
     {
         lod = lodArray[lodIndex];
         offset = Vector2.zero;
-        noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
+        noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, inverseLerp);
         new TerrainChunk(noiseSettings, chunkSize, lod, Vector3.zero, terrainMat, parent);
     }
     void OnValidate()

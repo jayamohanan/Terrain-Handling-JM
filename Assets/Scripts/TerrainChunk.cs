@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Unity.Jobs;
+using Unity.Collections;
 public class TerrainChunk
 {
     static int chunkSize;
@@ -38,6 +40,7 @@ public class TerrainChunk
     {
         Noise noise = new Noise(noiseSettings);
         map = noise.GenerateMap();
+        
         terrainChunk = new GameObject();
         terrainChunk.transform.position = position;
         terrainChunk.transform.SetParent(parent);
@@ -94,6 +97,98 @@ public class TerrainChunk
         }
         public Mesh CreateMesh(Dictionary<int, Mesh> lodDictionary)
         {
+            
+            int numVertices = (chunkSize - 1) / lod + 1;
+            NativeArray<Vector3> vertices = new NativeArray<Vector3>(numVertices * numVertices, Allocator.Persistent); 
+            NativeArray<int> triangles = new NativeArray<int>((numVertices - 1) * (numVertices - 1) * 6, Allocator.Persistent);
+            NativeArray<float> mapNativeArray = new NativeArray<float>(chunkSize * chunkSize, Allocator.Persistent);
+            for (int i = 0; i < chunkSize; i++)
+            {
+                for (int j = 0; j < chunkSize; j++)
+                {
+                    mapNativeArray[i * chunkSize + j] = map[i, j];
+
+                    //if (i == 0 && j < 5)
+                    //{
+                    //    Debug.Log("mapnative " + mapNativeArray[i * chunkSize + j]+" map "+map[i,j]);
+                    //}
+
+                }
+            }
+
+            new MeshCreatorStruct()
+            {
+                lod = lod,
+                numVertices = numVertices,
+                vertices = vertices,
+                triangles = triangles,
+                mapNativeArray = mapNativeArray
+            }.Schedule().Complete();
+
+            Vector3[] verticesManaged = new Vector3[vertices.Length];
+            int[] trianglesManaged = new int[triangles.Length];
+            vertices.CopyTo(verticesManaged);
+            triangles.CopyTo(trianglesManaged);
+
+            vertices.Dispose();
+            triangles.Dispose();
+            mapNativeArray.Dispose();
+
+            Mesh mesh = new Mesh();
+            mesh.vertices = verticesManaged;
+            mesh.triangles = trianglesManaged;
+            mesh.RecalculateNormals();
+            if (lodDictionary != null)
+            {
+                lodDictionary.Add(lod, mesh);
+            }
+            return mesh;
+        }
+        public struct MeshCreatorStruct : IJob
+        {
+            public int lod;
+            public int numVertices;
+            public NativeArray<Vector3> vertices;
+            public NativeArray<int> triangles;
+            public NativeArray<float> mapNativeArray;
+
+
+            public void Execute()
+            {
+                
+                float corner = -chunkSize / 2f;
+                float extraDistanceX = 0;
+                float extraDistanceZ = 0;
+                for (int j = 0; j < chunkSize; j += lod)
+                {
+                    for (int i = 0; i < chunkSize; i += lod)
+                    {
+                        int a = (j / lod) * numVertices + (i / lod);
+                        vertices[a] = new Vector3(corner + i + extraDistanceX, mapNativeArray[i*chunkSize+ j], corner + j + extraDistanceZ);
+                        extraDistanceX = 0;
+                        extraDistanceZ = 0;
+                    }
+                }
+                int index = 0;
+                for (int j = 0; j < numVertices - 1; j++)
+                {
+                    for (int i = 0; i < numVertices - 1; i++)
+                    {
+                        int a = j * numVertices + i;
+                        triangles[index] = a + numVertices;
+                        triangles[index + 1] = a + 1;
+                        triangles[index + 2] = a;
+                        triangles[index + 3] = a + numVertices;
+                        triangles[index + 4] = a + numVertices + 1;
+                        triangles[index + 5] = a + 1;
+                        index += 6;
+                    }
+                }
+            }
+        }
+
+        /*public Mesh CreateMesh(Dictionary<int, Mesh> lodDictionary)
+        {
             int numVertices = (chunkSize - 1) / lod + 1;
             Vector3[] vertices = new Vector3[numVertices * numVertices];
             int[] triangles = new int[(numVertices - 1) * (numVertices - 1) * 6];
@@ -106,22 +201,6 @@ public class TerrainChunk
                 for (int i = 0; i < chunkSize; i += lod)
                 {
                     int a = (j / lod) * numVertices + (i / lod);
-                    /*if (i == 0)
-                    {
-                        extraDistanceX = -0.5f;
-                    }
-                    if (j == 0)
-                    {
-                        extraDistanceZ = -0.5f;
-                    }
-                    if (i == (chunkSize - 1))
-                    {
-                        extraDistanceX = 0.5f;
-                    }
-                    if (j == (chunkSize - 1))
-                    {
-                        extraDistanceZ = 0.5f;
-                    }*/
                     vertices[a] = new Vector3(corner + i + extraDistanceX, map[i, j], corner + j + extraDistanceZ);
                     extraDistanceX = 0;
                     extraDistanceZ = 0;
@@ -152,6 +231,7 @@ public class TerrainChunk
                 lodDictionary.Add(lod, mesh);
             }
             return mesh;
-        }
+        }*/
+
     }
 }

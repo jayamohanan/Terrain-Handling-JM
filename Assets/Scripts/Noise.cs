@@ -14,48 +14,36 @@ public class Noise
     {
         float[,] map = new float[noiseSettings.chunkSize,noiseSettings.chunkSize];
         float[] map1D = new float[noiseSettings.chunkSize*noiseSettings.chunkSize];
-       NativeArray<float> mapNativeArray = new NativeArray<float>(noiseSettings.chunkSize*noiseSettings.chunkSize, Allocator.Temp);
-        new MapCreatorStruct(noiseSettings, ref mapNativeArray).Schedule().Complete();
-        mapNativeArray.CopyTo(map1D);
-        int width = map.GetLength(0);
-        int length = map.GetLength(1);
-        int x = 0;
-        int y = 0;
-
-        for (int i = 0; i < noiseSettings.chunkSize; i++)
-        {
-            for (int j = 0; j < noiseSettings.chunkSize; j++)
-            {
-                mapNativeArray[j * noiseSettings.chunkSize + i] = noiseSettings.animationCurve.Evaluate(Mathf.InverseLerp(minValue, maxValue, map[i, j])) * noiseSettings.height;
-            }
-        }
-
-
-        for (int i = 0; i < map1D.Length; i++)
-        {
-            map[x, y] = map1D[i];
-            if(i == width - 1)
-            {
-                x = 0;
-                y++;
-            }
-        }
+        NativeArray<float> mapNativeArray = new NativeArray<float>(noiseSettings.chunkSize*noiseSettings.chunkSize, Allocator.Persistent);
+        new MapCreatorStruct(noiseSettings, mapNativeArray).Schedule().Complete();
+        map = ChangeArrayDimension(mapNativeArray);
+        mapNativeArray.Dispose();
+       
         return map;
     }
+    public static float[,] ChangeArrayDimension(NativeArray<float> a)
+    {
+        int arrayLength = a.Length;
+        int width = (int)Mathf.Sqrt(arrayLength);
+        float[,] b = new float[width, width];
+
+        for (int i = 0; i < arrayLength; i++)
+        {
+            b[(i / width), (i % width)] = a[i];
+        }
+        return b;
+    }
+
 }
 
 struct MapCreatorStruct : IJob
 {
     private NoiseSettings noiseSettings;
     private NativeArray<float> mapNativeArray;
-    float maxValue;
-    float minValue;
-    public MapCreatorStruct(NoiseSettings noiseSettings, ref NativeArray<float> mapNativeArray, ref float maxValue, ref float minValue)
+    public MapCreatorStruct(NoiseSettings noiseSettings, NativeArray<float> mapNativeArray)
     {
         this.noiseSettings = noiseSettings;
         this.mapNativeArray = mapNativeArray;
-        this.maxValue = maxValue;
-        this.minValue = minValue;
     }
     public void Execute()
     {
@@ -70,9 +58,9 @@ struct MapCreatorStruct : IJob
             maxAmplitude += amplitude;
             amplitude *= noiseSettings.persistence;
         }
-        for (int j = 0; j < noiseSettings.chunkSize; j++)
+        for (int i = 0; i < noiseSettings.chunkSize; i++)
         {
-            for (int i = 0; i < noiseSettings.chunkSize; i++)
+            for (int j = 0; j < noiseSettings.chunkSize; j++)
             {
                 amplitude = 1;
                 frequency = 1;
@@ -80,22 +68,30 @@ struct MapCreatorStruct : IJob
                 float perlinY = ((j + noiseSettings.offset.y) / (float)noiseSettings.chunkSize) * noiseSettings.scale;
                 for (int k = 0; k < noiseSettings.octaves; k++)
                 {
-                    map[i, j] += Mathf.PerlinNoise(perlinX * frequency, perlinY * frequency) * amplitude;
+                    mapNativeArray[i* noiseSettings.chunkSize+ j] += Mathf.PerlinNoise(perlinX * frequency, perlinY * frequency) * amplitude;
                     amplitude *= noiseSettings.persistence;
                     frequency *= noiseSettings.lacunarity;
                 }
+            }
+        }
+       
+        for (int i = 0; i < noiseSettings.chunkSize; i++)
+        {
+            for (int j = 0; j < noiseSettings.chunkSize; j++)
+            {
+                if (mapNativeArray[i * noiseSettings.chunkSize + j] >= maxValue)
+                    maxValue = mapNativeArray[i * noiseSettings.chunkSize + j];
+                if (mapNativeArray[i * noiseSettings.chunkSize + j] < minValue)
+                    minValue = mapNativeArray[i * noiseSettings.chunkSize + j];
             }
         }
         for (int i = 0; i < noiseSettings.chunkSize; i++)
         {
             for (int j = 0; j < noiseSettings.chunkSize; j++)
             {
-                if (map[i, j] >= maxValue)
-                    maxValue = map[i, j];
-                if (map[i, j] < minValue)
-                    minValue = map[i, j];
+                int index = (int)(Mathf.Clamp01(Mathf.InverseLerp(minValue, maxValue, mapNativeArray[i * noiseSettings.chunkSize + j])) * 255);
+                mapNativeArray[i * noiseSettings.chunkSize + j] = GameManager.animationKeys[index] * noiseSettings.height;
             }
         }
-       
     }
 }
