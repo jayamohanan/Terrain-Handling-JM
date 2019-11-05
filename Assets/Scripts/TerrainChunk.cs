@@ -20,6 +20,8 @@ public class TerrainChunk
     public MeshCollider meshCollider;
     public MeshGenerator meshGenerator;
     Noise noise;
+
+
     public TerrainChunk(NoiseSettings noiseSettings, int chunkSize, int lod, Vector3 position, Material terrainMat, Transform parent)
     {
         this.noiseSettings = noiseSettings;
@@ -59,6 +61,7 @@ public class TerrainChunk
         {
         GameManager.threadInfoMapQueue.Enqueue(new ThreadInfoMap(OnMapDataReceived));
         }
+
     }
     public void OnMapDataReceived()//Main Thread
     {
