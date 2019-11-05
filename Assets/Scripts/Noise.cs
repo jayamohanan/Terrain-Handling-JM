@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Jobs;
 using Unity.Collections;
+using Unity.Burst;
 public class Noise
 {
     private NoiseSettings noiseSettings;
@@ -21,7 +22,7 @@ public class Noise
        
         return map;
     }
-    public static float[,] ChangeArrayDimension(NativeArray<float> a)
+    public float[,] ChangeArrayDimension(NativeArray<float> a)
     {
         int arrayLength = a.Length;
         int width = (int)Mathf.Sqrt(arrayLength);
@@ -35,7 +36,6 @@ public class Noise
     }
 
 }
-
 struct MapCreatorStruct : IJob
 {
     private NoiseSettings noiseSettings;

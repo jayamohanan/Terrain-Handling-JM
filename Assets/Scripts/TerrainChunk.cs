@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using Unity.Jobs;
 using Unity.Collections;
+using Unity.Burst;
 public class TerrainChunk
 {
     static int chunkSize;
@@ -97,7 +98,6 @@ public class TerrainChunk
         }
         public Mesh CreateMesh(Dictionary<int, Mesh> lodDictionary)
         {
-            
             int numVertices = (chunkSize - 1) / lod + 1;
             NativeArray<Vector3> vertices = new NativeArray<Vector3>(numVertices * numVertices, Allocator.Persistent); 
             NativeArray<int> triangles = new NativeArray<int>((numVertices - 1) * (numVertices - 1) * 6, Allocator.Persistent);
@@ -107,12 +107,6 @@ public class TerrainChunk
                 for (int j = 0; j < chunkSize; j++)
                 {
                     mapNativeArray[i * chunkSize + j] = map[i, j];
-
-                    //if (i == 0 && j < 5)
-                    //{
-                    //    Debug.Log("mapnative " + mapNativeArray[i * chunkSize + j]+" map "+map[i,j]);
-                    //}
-
                 }
             }
 
@@ -151,11 +145,9 @@ public class TerrainChunk
             public NativeArray<Vector3> vertices;
             public NativeArray<int> triangles;
             public NativeArray<float> mapNativeArray;
-
-
             public void Execute()
             {
-                
+                Debug.Log("MeshCreatorStruct");
                 float corner = -chunkSize / 2f;
                 float extraDistanceX = 0;
                 float extraDistanceZ = 0;
