@@ -38,10 +38,11 @@ public class Noise
             maxAmplitude += amplitude;
             amplitude *= persistence;
         }
-        for (int j = 0; j < chunkSize; j++)
+        for (int i = 0;  i< chunkSize; i++)
         {
-            for (int i = 0; i < chunkSize; i++)
+            for (int j = 0; j < chunkSize; j++)
             {
+                
                 amplitude = 1;
                 frequency = 1;
                 float perlinX = ((i + offset.x) / (float)chunkSize) * scale;
@@ -64,11 +65,14 @@ public class Noise
                     minValue = map[i, j];
             }
         }
+        minValue *= 0.5f;
+        maxAmplitude /= 1.5f;
         for (int i = 0; i < chunkSize; i++)
         {
             for (int j = 0; j < chunkSize; j++)
             {
-                map[i, j] = animationCurve.Evaluate(Mathf.InverseLerp(minValue, maxValue, map[i, j])) * height;
+                float heightValue = Mathf.Clamp01((map[i, j]-minValue) / maxAmplitude);
+                map[i, j] = animationCurve.Evaluate(heightValue) * height;
             }
         }
         return map;

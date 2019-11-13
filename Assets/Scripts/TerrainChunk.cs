@@ -19,6 +19,7 @@ public class TerrainChunk
     public MeshFilter meshFilter;
     public MeshCollider meshCollider;
     public MeshGenerator meshGenerator;
+    TerrainType[] terrainTypes;
     Noise noise;
 
 
@@ -30,6 +31,7 @@ public class TerrainChunk
         this.lod = lod;
         this.parent = parent;
         this.terrainMat = terrainMat;
+        //this.terrainTypes = terrainTypes;
         if (Application.isPlaying)
         {
             CreateTerrainChunk();

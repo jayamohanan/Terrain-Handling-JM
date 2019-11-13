@@ -24,7 +24,7 @@ public class MeshGenerator
         {
             for (int i = 0; i < chunkSize; i += lod)
             {
-
+                
                 int a = (j / lod) * numVertices + (i / lod);
                 vertices[a] = new Vector3(corner + i + extraDistanceX, map[i, j], corner + j + extraDistanceZ);
                 extraDistanceX = 0;

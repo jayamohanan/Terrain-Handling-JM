@@ -5,6 +5,7 @@ using System;
 using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
+    public Transform player;
     public bool mouseMovement;
     public float angularSpeed = 1000f;
     public bool autoUpdate;
@@ -21,6 +22,7 @@ public class GameManager : MonoBehaviour
     float[,] map;
     MeshFilter meshFilter;
     public bool inverseLerp;
+    [Range(0,1)]
     public float persistence;
     [Range(1, 10)]
     public float lacunarity;
@@ -30,8 +32,9 @@ public class GameManager : MonoBehaviour
     public static Dictionary<Coord, TerrainChunk> coordDictionary = new Dictionary<Coord, TerrainChunk>();
     List<Coord> activeCoord = new List<Coord>();
     Transform parent;
-    Vector3 lastPosition;
+    Vector3 lastPosition = new Vector3(1000,0,1000);
     public Material terrainMat;
+    public TerrainType[] terrainTypes;
     Vector2 offset;
     GameObject editorTerrain;
     MeshFilter editorMeshFilter;
@@ -62,7 +65,8 @@ public class GameManager : MonoBehaviour
         if (mouseMovement)
         {
             //Terrain along mousePosition
-            mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
+            //mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
+            mouseWorldPosition = new Vector3(player.transform.position.x, 0, player.transform.position.z);
         }
         else
         {
@@ -129,11 +133,11 @@ public class GameManager : MonoBehaviour
                 }
                 else if (Mathf.Abs(i) <= 1 && Mathf.Abs(j) <= 1)
                 {
-                    lodIndex = 3;
+                    lodIndex = 0;
                 }
                 else
                 {
-                    lodIndex = 6;
+                    lodIndex = 2;
                 }
                 lod = lodArray[lodIndex];
                 Coord neighbourCoord = new Coord((coord.xCoord + i), (coord.yCoord + j));
@@ -151,24 +155,29 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    Vector3 position = new Vector3(neighbourCoord.xCoord * chunkSize, 0, neighbourCoord.yCoord * chunkSize);
-                    offset = new Vector2(neighbourCoord.xCoord, neighbourCoord.yCoord) * chunkSize;
+                    Vector3 position = new Vector3(neighbourCoord.xCoord * (chunkSize - 1), 0, neighbourCoord.yCoord * (chunkSize - 1));
+                    offset = new Vector2(neighbourCoord.xCoord, neighbourCoord.yCoord) * (chunkSize-1);
                     noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
                     TerrainChunk terrainChunk = new TerrainChunk(noiseSettings, chunkSize, lod, position, terrainMat, parent);
                     coordDictionary.Add(neighbourCoord, terrainChunk);
                 }
                 activeCoord.Add(neighbourCoord);
-                
-
             }
         }
     }
     public void CreateTerrainChunkInEditor()
     {
+
         lod = lodArray[lodIndex];
         offset = Vector2.zero;
         noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
         new TerrainChunk(noiseSettings, chunkSize, lod, Vector3.zero, terrainMat, parent);
+    }
+
+    public void UpdateMaterial()
+    {
+        int terrainTypesLength = terrainTypes.Length;
+
     }
     void OnValidate()
     {
@@ -183,7 +192,7 @@ public class GameManager : MonoBehaviour
         if (chunkSize < 2)
         {
             chunkSize = 2;
-        }//jaya
+        }
     }
 }
 public struct Coord
@@ -195,4 +204,11 @@ public struct Coord
         this.xCoord = xCoord;
         this.yCoord = yCoord;
     }
+}
+
+public struct TerrainType
+{
+    public string name;
+    public Color color;
+    public float height;
 }
