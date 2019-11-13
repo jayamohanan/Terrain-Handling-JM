@@ -13,18 +13,30 @@ public class GameManagerEditor : Editor
     }
     public override void OnInspectorGUI()
     {
-        //base.OnInspectorGUI();
-        if (DrawDefaultInspector())
+        using (var check = new EditorGUI.ChangeCheckScope())
         {
-            if (gManager.autoUpdate)
+            base.OnInspectorGUI();
+            DrawScriptableObjectsEditor(gManager.mapData, ref gManager.mapDataFoldout);
+            if (check.changed)
             {
-                gManager.CreateTerrainChunkInEditor();
-            }
-            if (GUILayout.Button("Generate"))
-            {
-                gManager.CreateTerrainChunkInEditor();
+                if (gManager.autoUpdate)
+                {
+                    gManager.CreateTerrainChunkInEditor();
+                }
             }
         }
-        
+        if (GUILayout.Button("Generate"))
+        {
+            gManager.CreateTerrainChunkInEditor();
+        }
+    }
+    private void DrawScriptableObjectsEditor(Object so,ref bool foldout)
+    {   
+        Editor editor = CreateEditor(so);
+        foldout = EditorGUILayout.InspectorTitlebar(foldout, so);
+        if (foldout)
+        {
+            editor.OnInspectorGUI();
+        }
     }
 }

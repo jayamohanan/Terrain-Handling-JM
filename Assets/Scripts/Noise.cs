@@ -12,6 +12,8 @@ public class Noise
     AnimationCurve animationCurve;
     Vector3 offset;
     float height;
+
+    private static int count =0;
     public Noise(NoiseSettings noiseSettings)
     {
         this.chunkSize = noiseSettings.chunkSize;
@@ -73,6 +75,12 @@ public class Noise
             {
                 float heightValue = Mathf.Clamp01((map[i, j]-minValue) / maxAmplitude);
                 map[i, j] = animationCurve.Evaluate(heightValue) * height;
+                if (count<100)
+                {
+                    Debug.Log(map[i,j]);
+                    count++;
+                }
+                //map[i, j] = heightValue * height;
             }
         }
         return map;

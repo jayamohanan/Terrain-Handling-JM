@@ -10,23 +10,23 @@ public class GameManager : MonoBehaviour
     public float angularSpeed = 1000f;
     public bool autoUpdate;
     [Range(0, 4)]
-    public int lodIndex;
-    private int lod;
+    private int lodIndex =0;
+    private int lod = 1;
     int[] lodArray = new int[] { 1, 2, 4, 8, 12, 120, 240 };
-    [Range(0, 100)]
-    public int scale;
-    public int height;
-    [Range(1, 6)]
-    public int octaves;
-    private int chunkSize = 241;
+    [HideInInspector] public bool mapDataFoldout = true;
+
+    //[Range(0, 100)] public int mapData.scale;
+    //public int mapData.height;
+    //[Range(1, 6)] public int mapData.octaves;
+    //private int mapData.chunkSize = 241;
+    //[Range(0, 1)] public float mapData.persistence;
+    //[Range(1, 10)] public float mapData.lacunarity;
+    //public AnimationCurve mapData.animationCurve;
+
     float[,] map;
     MeshFilter meshFilter;
     public bool inverseLerp;
-    [Range(0,1)]
-    public float persistence;
-    [Range(1, 10)]
-    public float lacunarity;
-    public AnimationCurve animationCurve;
+    
     [Header("Grid")]
     public int gridCount;
     public static Dictionary<Coord, TerrainChunk> coordDictionary = new Dictionary<Coord, TerrainChunk>();
@@ -43,13 +43,13 @@ public class GameManager : MonoBehaviour
     public static Queue<ThreadInfoMesh> threadInfoMeshQueue = new Queue<ThreadInfoMesh>();
     public static Queue<ThreadInfoMap> threadInfoMapQueue = new Queue<ThreadInfoMap>();
 
-    
+    [HideInInspector] public MapData mapData;//scriptable object contents will be shown by calling a dedicated edior function
+
     void Start()
     {
         parent = new GameObject("Parent").transform;
         InitializeAndClear();
         GetCurrentCoord();
-
     }
     
     public void InitializeAndClear()
@@ -107,7 +107,7 @@ public class GameManager : MonoBehaviour
         coordDictionary[coords].terrainChunk.SetActive(false);
     }
     activeCoord.Clear();
-    Coord coord = new Coord(Mathf.RoundToInt(mouseWorldPosition.x / chunkSize), Mathf.RoundToInt(mouseWorldPosition.z / chunkSize));
+    Coord coord = new Coord(Mathf.RoundToInt(mouseWorldPosition.x / mapData.chunkSize), Mathf.RoundToInt(mouseWorldPosition.z / mapData.chunkSize));
     return coord;
     }
     public void CreateGrid(Coord coord)
@@ -155,10 +155,10 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    Vector3 position = new Vector3(neighbourCoord.xCoord * (chunkSize - 1), 0, neighbourCoord.yCoord * (chunkSize - 1));
-                    offset = new Vector2(neighbourCoord.xCoord, neighbourCoord.yCoord) * (chunkSize-1);
-                    noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
-                    TerrainChunk terrainChunk = new TerrainChunk(noiseSettings, chunkSize, lod, position, terrainMat, parent);
+                    Vector3 position = new Vector3(neighbourCoord.xCoord * (mapData.chunkSize - 1), 0, neighbourCoord.yCoord * (mapData.chunkSize - 1));
+                    offset = new Vector2(neighbourCoord.xCoord, neighbourCoord.yCoord) * (mapData.chunkSize-1);
+                    noiseSettings = new NoiseSettings(mapData.chunkSize, mapData.octaves, mapData.persistence, mapData.lacunarity, mapData.scale, offset, mapData.height, mapData.animationCurve, inverseLerp);
+                    TerrainChunk terrainChunk = new TerrainChunk(noiseSettings, mapData.chunkSize, lod, position, terrainMat, parent);
                     coordDictionary.Add(neighbourCoord, terrainChunk);
                 }
                 activeCoord.Add(neighbourCoord);
@@ -170,8 +170,8 @@ public class GameManager : MonoBehaviour
 
         lod = lodArray[lodIndex];
         offset = Vector2.zero;
-        noiseSettings = new NoiseSettings(chunkSize, octaves, persistence, lacunarity, scale, offset, height, animationCurve, inverseLerp);
-        new TerrainChunk(noiseSettings, chunkSize, lod, Vector3.zero, terrainMat, parent);
+        noiseSettings = new NoiseSettings(mapData.chunkSize, mapData.octaves, mapData.persistence, mapData.lacunarity, mapData.scale, offset, mapData.height, mapData.animationCurve, inverseLerp);
+        new TerrainChunk(noiseSettings, mapData.chunkSize, lod, Vector3.zero, terrainMat, parent);
     }
 
     public void UpdateMaterial()
@@ -179,21 +179,7 @@ public class GameManager : MonoBehaviour
         int terrainTypesLength = terrainTypes.Length;
 
     }
-    void OnValidate()
-    {
-        if (persistence <= 0)
-        {
-            persistence = 0.01f;
-        }
-        if (persistence > 1)
-        {
-            persistence = 1;
-        }
-        if (chunkSize < 2)
-        {
-            chunkSize = 2;
-        }
-    }
+    
 }
 public struct Coord
 {
