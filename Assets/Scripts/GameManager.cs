@@ -43,7 +43,7 @@ public class GameManager : MonoBehaviour
     public static Queue<ThreadInfoMesh> threadInfoMeshQueue = new Queue<ThreadInfoMesh>();
     public static Queue<ThreadInfoMap> threadInfoMapQueue = new Queue<ThreadInfoMap>();
 
-    [HideInInspector] public MapData mapData;//scriptable object contents will be shown by calling a dedicated edior function
+    public MapData mapData;//scriptable object contents will be shown by calling a dedicated edior function
 
     void Start()
     {

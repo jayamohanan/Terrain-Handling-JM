@@ -67,7 +67,7 @@ public class Noise
                     minValue = map[i, j];
             }
         }
-        minValue *= 0.5f;
+        minValue *= 0.3f;
         maxAmplitude /= 1.5f;
         for (int i = 0; i < chunkSize; i++)
         {
@@ -75,12 +75,6 @@ public class Noise
             {
                 float heightValue = Mathf.Clamp01((map[i, j]-minValue) / maxAmplitude);
                 map[i, j] = animationCurve.Evaluate(heightValue) * height;
-                if (count<100)
-                {
-                    Debug.Log(map[i,j]);
-                    count++;
-                }
-                //map[i, j] = heightValue * height;
             }
         }
         return map;
