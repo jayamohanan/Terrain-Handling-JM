@@ -22,7 +22,6 @@ public class TerrainChunk
     TerrainType[] terrainTypes;
     Noise noise;
 
-
     public TerrainChunk(NoiseSettings noiseSettings, int chunkSize, int lod, Vector3 position, Material terrainMat, Transform parent)
     {
         this.noiseSettings = noiseSettings;
@@ -121,7 +120,7 @@ public class TerrainChunk
         }
         else
         {
-            Debug.Log("GameObject with tag Terrain doesn't exest");
+            Debug.Log("GameObject with tag Terrain doesn't exist");
         }
     }
 }

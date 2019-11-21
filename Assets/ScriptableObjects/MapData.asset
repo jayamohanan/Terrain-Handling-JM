@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28b9bc5495830dc449d06cc8418a2a55, type: 3}
   m_Name: MapData
   m_EditorClassIdentifier: 
-  scale: 8
-  height: 15
-  octaves: 4
+  autoUpdate: 1
+  scale: 6
+  height: 20
+  octaves: 6
   chunkSize: 241
-  persistence: 0.7
-  lacunarity: 1.7
+  persistence: 0.4
+  lacunarity: 2
   animationCurve:
     serializedVersion: 2
     m_Curve:
@@ -31,7 +32,7 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.4
+      time: 0.45
       value: 0
       inSlope: -0.003202655
       outSlope: -0.003202655
@@ -40,8 +41,17 @@ MonoBehaviour:
       inWeight: 0.33333334
       outWeight: 0.041109443
     - serializedVersion: 3
+      time: 0.5367786
+      value: 0.11754527
+      inSlope: 2.7061765
+      outSlope: 2.7061765
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
       time: 1
-      value: 1
+      value: 0.997345
       inSlope: 0
       outSlope: 0
       tangentMode: 0

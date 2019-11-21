@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99c591920ee2da04ba81b9f715a09e37, type: 3}
+  m_Name: Terrain Data
+  m_EditorClassIdentifier: 
+  autoUpdate: 0
+  terrainTypes:
+  - name: Water
+    texture: {fileID: 2800000, guid: db243d2611d444037835ecd4af49e9b9, type: 3}
+    startHeight: 0
+    tintColor: {r: 0.3260057, g: 0.47217402, b: 0.6226415, a: 1}
+    tintStrength: 0.25
+    blendStrength: 0.28
+  - name: Sand
+    texture: {fileID: 2800000, guid: 78c40a2f18561480eab11b27ad5713aa, type: 3}
+    startHeight: 0.1
+    tintColor: {r: 0.3773585, g: 0.15918091, b: 0, a: 1}
+    tintStrength: 0.25
+    blendStrength: 1
+  - name: Grass
+    texture: {fileID: 2800000, guid: e36d15b65ccd248c19a846616a6767f9, type: 3}
+    startHeight: 0.15
+    tintColor: {r: 0.009967966, g: 0.3018868, b: 0.034294512, a: 1}
+    tintStrength: 0.12
+    blendStrength: 0.61
+  - name: Rock
+    texture: {fileID: 2800000, guid: 37ad0d4d757814f44ba3bc82d824e4fa, type: 3}
+    startHeight: 0.3
+    tintColor: {r: 0.24470451, g: 0.2580256, b: 0.3679245, a: 1}
+    tintStrength: 0.22
+    blendStrength: 0.47
+  - name: Ice
+    texture: {fileID: 2800000, guid: 22da49d227e55449d9ab0dbc09fe7f46, type: 3}
+    startHeight: 0.8
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    tintStrength: 0.25
+    blendStrength: 1

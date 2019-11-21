@@ -16,10 +16,8 @@ public class GameManagerEditor : Editor
         using (var check = new EditorGUI.ChangeCheckScope())
         {
             base.OnInspectorGUI();
-            if (gManager.mapData)
-            {
-                DrawScriptableObjectsEditor(gManager.mapData, ref gManager.mapDataFoldout);
-            }
+            DrawScriptableObjectsEditor(gManager.mapData, ref gManager.mapDataFoldout);
+            DrawScriptableObjectsEditor(gManager.terrainData, ref gManager.terrainDataFoldout);
             if (check.changed)
             {
                 if (gManager.autoUpdate)

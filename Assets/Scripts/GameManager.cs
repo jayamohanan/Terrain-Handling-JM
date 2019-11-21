@@ -5,6 +5,7 @@ using System;
 using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
+    #region Variables
     public Transform player;
     public bool mouseMovement;
     public float angularSpeed = 1000f;
@@ -13,15 +14,8 @@ public class GameManager : MonoBehaviour
     private int lodIndex =0;
     private int lod = 1;
     int[] lodArray = new int[] { 1, 2, 4, 8, 12, 120, 240 };
-    [HideInInspector] public bool mapDataFoldout = true;
-
-    //[Range(0, 100)] public int mapData.scale;
-    //public int mapData.height;
-    //[Range(1, 6)] public int mapData.octaves;
-    //private int mapData.chunkSize = 241;
-    //[Range(0, 1)] public float mapData.persistence;
-    //[Range(1, 10)] public float mapData.lacunarity;
-    //public AnimationCurve mapData.animationCurve;
+    [HideInInspector] public bool mapDataFoldout;
+    [HideInInspector] public bool terrainDataFoldout;
 
     float[,] map;
     MeshFilter meshFilter;
@@ -34,7 +28,6 @@ public class GameManager : MonoBehaviour
     Transform parent;
     Vector3 lastPosition = new Vector3(1000,0,1000);
     public Material terrainMat;
-    public TerrainType[] terrainTypes;
     Vector2 offset;
     GameObject editorTerrain;
     MeshFilter editorMeshFilter;
@@ -43,10 +36,13 @@ public class GameManager : MonoBehaviour
     public static Queue<ThreadInfoMesh> threadInfoMeshQueue = new Queue<ThreadInfoMesh>();
     public static Queue<ThreadInfoMap> threadInfoMapQueue = new Queue<ThreadInfoMap>();
 
-    public MapData mapData;//scriptable object contents will be shown by calling a dedicated edior function
+    [HideInInspector] public MapData mapData;//scriptable object contents will be shown by calling a dedicated edior function
+    [HideInInspector] public TerrainData terrainData;//scriptable object contents will be shown by calling a dedicated edior function
+    #endregion
 
     void Start()
     {
+        
         parent = new GameObject("Parent").transform;
         InitializeAndClear();
         GetCurrentCoord();
@@ -56,7 +52,7 @@ public class GameManager : MonoBehaviour
     {
         activeCoord.Clear();
         coordDictionary.Clear();
-
+        
         Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.y));
         Coord coord = GetCoordFromWorldPosition(mouseWorldPosition);
     }
@@ -165,21 +161,36 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
     public void CreateTerrainChunkInEditor()
     {
-
-        lod = lodArray[lodIndex];
-        offset = Vector2.zero;
-        noiseSettings = new NoiseSettings(mapData.chunkSize, mapData.octaves, mapData.persistence, mapData.lacunarity, mapData.scale, offset, mapData.height, mapData.animationCurve, inverseLerp);
-        new TerrainChunk(noiseSettings, mapData.chunkSize, lod, Vector3.zero, terrainMat, parent);
-    }
-
-    public void UpdateMaterial()
+        if (!Application.isPlaying)
+        {
+            lod = lodArray[lodIndex];
+            offset = Vector2.zero;
+            noiseSettings = new NoiseSettings(mapData.chunkSize, mapData.octaves, mapData.persistence, mapData.lacunarity, mapData.scale, offset, mapData.height, mapData.animationCurve, inverseLerp);
+            SetShaderValues();
+            new TerrainChunk(noiseSettings, mapData.chunkSize, lod, Vector3.zero, terrainMat, parent);
+        }
+    }   
+    public void SetShaderValues()
     {
-        int terrainTypesLength = terrainTypes.Length;
-
+        mapData.SetShaderHeights(terrainMat);
+        terrainData.SetTerrainData(terrainMat);
     }
-    
+    private void OnValidate()
+    {
+        if (mapData != null)
+        {
+            mapData.DataUpdateEvent -= CreateTerrainChunkInEditor;
+            mapData.DataUpdateEvent += CreateTerrainChunkInEditor;
+        }
+        if(terrainData!=null)
+        {
+            terrainData.DataUpdateEvent -= CreateTerrainChunkInEditor;
+            terrainData.DataUpdateEvent += CreateTerrainChunkInEditor;
+        }
+    }
 }
 public struct Coord
 {
@@ -192,9 +203,3 @@ public struct Coord
     }
 }
 
-public struct TerrainType
-{
-    public string name;
-    public Color color;
-    public float height;
-}

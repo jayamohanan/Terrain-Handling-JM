@@ -33,8 +33,8 @@ public class Noise
         float frequency;
         float amplitude = 1;
         float maxAmplitude = 0;
-        float maxValue = float.MinValue;
-        float minValue = float.MaxValue;
+        //float maxValue = float.MinValue;
+        //float minValue = float.MaxValue;
         for (int i = 0; i < octaves; i++)
         {
             maxAmplitude += amplitude;
@@ -56,25 +56,28 @@ public class Noise
                     frequency *= lacunarity;
                 }
             }
-        }
+        }//us
+        //for (int i = 0; i < chunkSize; i++)
+        //{
+        //    for (int j = 0; j < chunkSize; j++)
+        //    {
+        //        if (map[i, j] >= maxValue)
+        //            maxValue = map[i, j];
+        //        if (map[i, j] <= minValue)
+        //            minValue = map[i, j];
+        //    }
+        //}
+        //minValue *= 0.3f;
+        maxAmplitude /= 1.25f;
+
+
         for (int i = 0; i < chunkSize; i++)
         {
             for (int j = 0; j < chunkSize; j++)
             {
-                if (map[i, j] >= maxValue)
-                    maxValue = map[i, j];
-                if (map[i, j] <= minValue)
-                    minValue = map[i, j];
-            }
-        }
-        minValue *= 0.3f;
-        maxAmplitude /= 1.5f;
-        for (int i = 0; i < chunkSize; i++)
-        {
-            for (int j = 0; j < chunkSize; j++)
-            {
-                float heightValue = Mathf.Clamp01((map[i, j]-minValue) / maxAmplitude);
+                float heightValue = Mathf.Clamp01((map[i, j]-0.1f) / maxAmplitude) ;
                 map[i, j] = animationCurve.Evaluate(heightValue) * height;
+                //map[i, j] = heightValue * height;
             }
         }
         return map;
