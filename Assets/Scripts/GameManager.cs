@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     #region Variables
     public Transform player;
     public bool mouseMovement;
-    public float angularSpeed = 1000f;
+    public float angularSpeed;
     public bool autoUpdate;
     [Range(0, 4)]
     private int lodIndex =0;
@@ -42,7 +42,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        
+        SetShaderValues();
         parent = new GameObject("Parent").transform;
         InitializeAndClear();
         GetCurrentCoord();

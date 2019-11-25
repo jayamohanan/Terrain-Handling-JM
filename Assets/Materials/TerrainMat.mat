@@ -26,6 +26,6 @@ Material:
     m_Floats:
     - _Glossiness: 0.5
     - _Metallic: 0
-    - _TextureScale: 1
+    - _TextureScale: 11.2
     m_Colors:
     - _Color: {r: 0.745283, g: 0.4464667, b: 0.47082224, a: 1}

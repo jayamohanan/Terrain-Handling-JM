@@ -1,0 +1,57 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+RWStructuredBuffer<float2> points;
+RWStructuredBuffer<float> unitDimensions;//grid.unitWidth, grid.unitLength, grid.rows, grid.columns
+RWStructuredBuffer<float> maxDst;
+
+float inverseLerp(float value, float min, float max) {
+	return saturate((value - min) / (max - min));
+}
+
+float Calculate(int2 pixel) {
+	float min = 1000.0;
+	float2 pixelFloat = float2(pixel.x, pixel.y);
+	int xCoord = pixel.x / unitDimensions[0];
+	int yCoord = pixel.y / unitDimensions[1];
+
+	for (int i = -1; i < 2; i++)
+	{
+		for (int j = -1; j < 2; j++)
+		{
+			int neighbourX = xCoord + i;
+			int neighbourY = yCoord + j;
+			if (neighbourX >= 0 && neighbourX < unitDimensions[3] && neighbourY >= 0 && neighbourY < unitDimensions[2]) {
+				float dst = distance(pixelFloat, points[neighbourX* unitDimensions[2]+ neighbourY]);
+				if (dst < min) {
+					min = dst;
+				}
+			}
+		}
+	}
+	//checking for all points per pixel
+	/*for (int i = 0; i < points.Length; i++)
+	{
+		float dst = distance(pixel, points[i]);
+		if (dst < min) {
+			min = dst;
+		}
+	}*/
+	
+	return inverseLerp(min, 0.0, maxDst[0]);
+	//return inverseLerp(min, 0.0,16.0);
+}
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+
+	float col = Calculate(int2(id.x, id.y));
+	float inverseCol = 1 - col;
+    //Result[id.xy] = float4(col, col,col, 1);
+    Result[id.xy] = float4(inverseCol, inverseCol, inverseCol, 1);
+}
