@@ -5,7 +5,7 @@
 // with cs.SetTexture
 RWTexture2D<float4> Result;
 RWStructuredBuffer<float2> points;
-RWStructuredBuffer<float> unitDimensions;//grid.unitWidth, grid.unitLength, grid.rows, grid.columns
+RWStructuredBuffer<float3> unitDimensions;//V3(grid.unitWidth, grid.unitLength,grid.unitDepth), v3(grid.rows, grid.columns, grid.stacks) | Length is 2
 RWStructuredBuffer<float> maxDst;
 
 float inverseLerp(float value, float min, float max) {
@@ -32,17 +32,39 @@ float Calculate(int2 pixel) {
 			}
 		}
 	}
-	//checking for all points per pixel
-	/*for (int i = 0; i < points.Length; i++)
-	{
-		float dst = distance(pixel, points[i]);
-		if (dst < min) {
-			min = dst;
-		}
-	}*/
-	
 	return inverseLerp(min, 0.0, maxDst[0]);
-	//return inverseLerp(min, 0.0,16.0);
+}
+
+float Calculate3D(float3 point) {
+	float min = 1000.0;
+	uint3 gridIndex = floor(point);
+	uint3 neighbourGridIndex;
+
+	int stacks = unitDimensions[1].z;
+	int rows = unitDimensions[1].x;
+	int columns = unitDimensions[1].y;
+	for (int i = -1; i < 2; i++)
+	{
+		for (int j = -1; j < 2; j++)
+		{
+			for (int k = -1; k < 2; k++)
+			{
+				neighbourGridIndex = gridIndex + uint3(i, j, k);
+				if (min(neighbourGridIndex.x, min(neighbourGridIndex.y, neighbourGridIndex.z)) == -1 || (neighbourGridIndex.x == columns || neighbourGridIndex.y == rows || neighbourGridIndex.z == stacks))
+				{
+					continue;
+				}
+				else {
+					neighbourPointIndex = neighbourGridIndex.x * columns + neighbourGridIndex.y + neighbourGridIndex.z * columns * rows;
+					dst = distance(point, points[neighbourPointIndex]);
+					if (dst < min) {
+						min = dst;
+					}
+				}
+			}
+		}
+	}
+	return min;
 }
 
 [numthreads(8,8,1)]
